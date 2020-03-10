@@ -1674,8 +1674,7 @@ Type const& IRGeneratorForStatements::type(Expression const& _expression)
 
 bool IRGeneratorForStatements::visit(TryStatement const& _tryStatement)
 {
-	optional<ReturnInfo> outerReturnInfo(std::move(m_returnInfo));
-	ScopeGuard _leaveGuard = ScopeGuard([&]() { m_returnInfo.swap(outerReturnInfo); });
+	solAssert(!m_returnInfo.has_value(), "");
 
 	m_returnInfo.reset();
 	_tryStatement.externalCall().accept(*this);
@@ -1688,6 +1687,7 @@ bool IRGeneratorForStatements::visit(TryStatement const& _tryStatement)
 	m_code << "case 0 { // success case\n";
 	TryCatchClause const& successClause = *_tryStatement.clauses().front();
 	decodeTryCallReturnParameters(successClause, _tryStatement.externalCall().annotation().type);
+	m_returnInfo.reset();
 	successClause.block().accept(*this);
 	m_code << "}\n";
 
