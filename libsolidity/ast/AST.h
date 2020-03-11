@@ -1374,20 +1374,33 @@ public:
 		ASTPointer<ASTString> const& _docString,
 		ASTPointer<Expression> const& _externalCall,
 		std::vector<ASTPointer<TryCatchClause>> const& _clauses
-	):
-		Statement(_id, _location, _docString),
-		m_externalCall(_externalCall),
-		m_clauses(_clauses)
-	{}
+	);
+
 	void accept(ASTVisitor& _visitor) override;
 	void accept(ASTConstVisitor& _visitor) const override;
 
 	Expression const& externalCall() const { return *m_externalCall; }
-	std::vector<ASTPointer<TryCatchClause>> const& clauses() const { return m_clauses; }
+
+	ASTPointer<TryCatchClause> successClause() const noexcept { return m_success; }
+	ASTPointer<TryCatchClause> structuredClause() const noexcept { return m_structured; }
+	ASTPointer<TryCatchClause> fallbackClause() const noexcept { return m_fallback; }
+
+	std::vector<ASTPointer<TryCatchClause>> clauses() const
+	{
+		std::vector<ASTPointer<TryCatchClause>> result;
+		result.emplace_back(m_success);
+		if (m_structured)
+			result.emplace_back(m_structured);
+		if (m_fallback)
+			result.emplace_back(m_fallback);
+		return result;
+	}
 
 private:
 	ASTPointer<Expression> m_externalCall;
-	std::vector<ASTPointer<TryCatchClause>> m_clauses;
+	ASTPointer<TryCatchClause> m_success{};
+	ASTPointer<TryCatchClause> m_structured{};
+	ASTPointer<TryCatchClause> m_fallback{};
 };
 
 /**

@@ -669,3 +669,26 @@ string Literal::getChecksummedAddress() const
 	address.insert(address.begin(), 40 - address.size(), '0');
 	return util::getChecksummedAddress(address);
 }
+
+TryStatement::TryStatement(
+	int64_t _id,
+	SourceLocation const& _location,
+	ASTPointer<ASTString> const& _docString,
+	ASTPointer<Expression> const& _externalCall,
+	std::vector<ASTPointer<TryCatchClause>> const& _clauses
+):
+	Statement(_id, _location, _docString),
+	m_externalCall(_externalCall)
+{
+	for (size_t i = 1; i < _clauses.size(); ++i)
+		if (_clauses[i]->errorName() == "Error")
+			m_structured = _clauses[i];
+		else if (_clauses[i]->errorName().empty())
+			m_fallback = _clauses[i];
+		else
+			solAssert(false, "");
+
+	solAssert(_clauses.size() == size_t(1 + (m_structured ? 1 : 0) + (m_fallback ? 1 : 0)), "");
+
+	m_success = _clauses.front();
+}
